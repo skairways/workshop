@@ -22,16 +22,11 @@ const obstacleItemList = [
 ];
 
 window.onload = () =>
-  new Game(
-    // player-img
-    "./img/dino.png",
-    // player-dead-img
-    "./img/dino-dead.png",
-    board,
-    player,
-    obstacle,
-    obstacleItemList
-  );
+  new Game()
+    .buildAsset("./img/dino.png", "./img/dino-dead.png")
+    .buildBoard(board)
+    .buildPlayer(player)
+    .buildObstacle(obstacle, obstacleItemList)
 
 class Game {
   velocityY = 0;
@@ -40,33 +35,24 @@ class Game {
   obstacleList = [];
   gameOver = false;
 
-  constructor(
-    playerImg,
-    deadImg,
-    boardProps,
-    player,
-    obstacle,
-    obstacleItemList
-  ) {
-    // board
-    this.board = document.getElementById(boardProps.element);
-    this.board.height = boardProps.height;
-    this.board.width = boardProps.width;
-    // player
-    this.playerX = player.x;
-    this.playerY = boardProps.height - player.height;
-    this.player = {
-      x: this.playerX,
-      y: this.playerY,
-      width: player.width,
-      height: player.height,
-    };
+  constructor() {
+    requestAnimationFrame(this.update.bind(this));
+    document.addEventListener("keydown", this.move.bind(this));
+    setInterval(this.placeItem.bind(this), 1000);
+  }
 
-    this.obstacle = obstacle;
-    this.obstacle.y = boardProps.height - obstacle.height;
-    this.obstacleItemList = obstacleItemList;
+  static createImage(url) {
+    let img = new Image();
+    img.src = url;
+    return img;
+  }
 
-    this.context = this.board.getContext("2d");
+  buildGravity(gravity) {
+    this.gravity = gravity;
+    return this;
+  }
+
+  buildAsset(playerImg, deadImg) {
     this.playerImg = Game.createImage(playerImg);
     this.deadImg = deadImg;
     this.playerImg.onload = () =>
@@ -78,15 +64,32 @@ class Game {
         this.player.height
       );
 
-    requestAnimationFrame(this.update.bind(this));
-    document.addEventListener("keydown", this.move.bind(this));
-    setInterval(this.placeItem.bind(this), 1000);
+    return this;
   }
 
-  static createImage(url) {
-    let img = new Image();
-    img.src = url;
-    return img;
+  buildBoard(boardProps) {
+    this.board = document.getElementById(boardProps.element);
+    this.board.height = boardProps.height;
+    this.board.width = boardProps.width;
+    this.context = this.board.getContext("2d");
+    return this;
+  }
+  buildPlayer(player) {
+    this.playerX = player.x;
+    this.playerY = this.board.height - player.height;
+    this.player = {
+      x: this.playerX,
+      y: this.playerY,
+      width: player.width,
+      height: player.height,
+    };
+    return this;
+  }
+  buildObstacle(obstacle, obstacleItemList) {
+    this.obstacle = obstacle;
+    this.obstacle.y = this.board.height - obstacle.height;
+    this.obstacleItemList = obstacleItemList;
+    return this;
   }
 
   move(e) {
